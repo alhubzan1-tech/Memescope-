@@ -1,6 +1,7 @@
 {
   "name": "memescope",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Production Trading Terminal for Solana",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -17,7 +18,14 @@
     "recharts": "^2.10.3",
     "lucide-react": "^0.294.0",
     "clsx": "^2.0.0",
-    "tailwindcss": "^3.4.1"
+    "tailwindcss": "^3.4.1",
+    "@solana/web3.js": "^1.87.6",
+    "@solana/wallet-adapter-react": "^0.15.35",
+    "@solana/wallet-adapter-react-ui": "^0.9.42",
+    "@solana/wallet-adapter-base": "^0.9.23",
+    "@solana/wallet-adapter-phantom": "^0.9.22",
+    "@solana/wallet-adapter-wallets": "^0.19.31",
+    "bs58": "^5.0.0"
   },
   "devDependencies": {
     "typescript": "^5.3.3",

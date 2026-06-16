@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { getTrendingTokens, getTokenPrice } from '@/lib/realApi';
 
 interface Token {
   ca: string;
@@ -11,6 +12,7 @@ interface Token {
   holders: number;
   logo?: string;
   age?: number;
+  chainId?: string;
 }
 
 interface Holding {
@@ -31,13 +33,15 @@ interface Trade {
   fee: number;
   timestamp: number;
   txHash?: string;
+  status: 'pending' | 'confirmed' | 'failed';
 }
 
 interface Store {
   // Auth
   wallet: string | null;
+  walletType: 'phantom' | 'metamask' | null;
   isConnected: boolean;
-  setWallet: (wallet: string | null) => void;
+  setWallet: (wallet: string | null, type?: 'phantom' | 'metamask') => void;
 
   // Portfolio
   balance: number;
@@ -48,6 +52,7 @@ interface Store {
   removeHolding: (tokenCA: string) => void;
   updateHoldingPrice: (tokenCA: string, price: number) => void;
   addTrade: (trade: Trade) => void;
+  updateTradeStatus: (tradeId: string, status: 'pending' | 'confirmed' | 'failed') => void;
 
   // Tokens
   trendingTokens: Token[];
@@ -58,21 +63,28 @@ interface Store {
   watchlist: string[];
   addToWatchlist: (ca: string) => void;
   removeFromWatchlist: (ca: string) => void;
+
+  // Loading states
+  isLoadingTrending: boolean;
+  setIsLoadingTrending: (loading: boolean) => void;
 }
 
 export const useStore = create<Store>((set) => ({
   wallet: typeof window !== 'undefined' ? localStorage.getItem('wallet') : null,
+  walletType: typeof window !== 'undefined' ? (localStorage.getItem('walletType') as any) : null,
   isConnected: typeof window !== 'undefined' ? !!localStorage.getItem('wallet') : false,
-  setWallet: (wallet) => {
+  setWallet: (wallet, type) => {
     if (wallet) {
       localStorage.setItem('wallet', wallet);
+      if (type) localStorage.setItem('walletType', type);
     } else {
       localStorage.removeItem('wallet');
+      localStorage.removeItem('walletType');
     }
-    set({ wallet, isConnected: !!wallet });
+    set({ wallet, walletType: type || null, isConnected: !!wallet });
   },
 
-  balance: 500,
+  balance: 0,
   holdings: [],
   trades: [],
   setBalance: (balance) => set({ balance }),
@@ -90,6 +102,11 @@ export const useStore = create<Store>((set) => ({
   addTrade: (trade) => set((state) => ({
     trades: [...state.trades, trade],
   })),
+  updateTradeStatus: (tradeId, status) => set((state) => ({
+    trades: state.trades.map((t) =>
+      t.id === tradeId ? { ...t, status } : t
+    ),
+  })),
 
   trendingTokens: [],
   setTrendingTokens: (tokens) => set({ trendingTokens: tokens }),
@@ -106,4 +123,7 @@ export const useStore = create<Store>((set) => ({
   removeFromWatchlist: (ca) => set((state) => ({
     watchlist: state.watchlist.filter((item) => item !== ca),
   })),
+
+  isLoadingTrending: false,
+  setIsLoadingTrending: (loading) => set({ isLoadingTrending: loading }),
 }));
