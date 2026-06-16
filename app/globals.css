@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  background: #0f1419;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  height: 100%;
+  overflow: hidden;
+}
+
+#__next {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.green-text {
+  color: #00d084;
+}
+
+.red-text {
+  color: #ff4757;
+}
+
+.price-flash {
+  animation: flash 0.3s ease-in-out;
+}
+
+@keyframes flash {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+.btn-primary {
+  @apply px-4 py-2 bg-[#00d084] text-black rounded-lg font-semibold hover:bg-[#00e094] transition-all;
+}
+
+.btn-secondary {
+  @apply px-4 py-2 bg-[#1a1f2e] text-white rounded-lg font-semibold hover:bg-[#242a38] transition-all border border-[#2a2f3e];
+}
+
+.btn-danger {
+  @apply px-4 py-2 bg-[#ff4757] text-white rounded-lg font-semibold hover:bg-[#ff6674] transition-all;
+}
+
+input, textarea, select {
+  @apply bg-[#1a1f2e] text-white border border-[#2a2f3e] rounded-lg px-3 py-2 focus:outline-none focus:border-[#00d084];
+}
