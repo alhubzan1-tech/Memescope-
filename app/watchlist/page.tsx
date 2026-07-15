@@ -6,40 +6,43 @@ import { useStore } from '@/lib/store';
 import Sidebar from '@/components/Sidebar';
 import Topbar from '@/components/Topbar';
 import TokenCard from '@/components/TokenCard';
-import TradeModal from '@/components/TradeModal';
-import { getTrendingTokens } from '@/lib/mockApi';
-import { Star } from 'lucide-react';
+import { Heart } from 'lucide-react';
 
-export default function Watchlist() {
+export default function WatchlistPage() {
   const router = useRouter();
-  const { isConnected, watchlist, trendingTokens, setTrendingTokens } = useStore();
+  const { wallet, watchlist } = useStore();
+  const [watchlistTokens, setWatchlistTokens] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedToken, setSelectedToken] = useState<any>(null);
-  const [tradeMode, setTradeMode] = useState<'BUY' | 'SELL'>('BUY');
 
   useEffect(() => {
-    if (!isConnected) {
+    if (!wallet) {
       router.push('/');
       return;
     }
 
-    const loadTokens = async () => {
-      if (trendingTokens.length === 0) {
-        const tokens: any = await getTrendingTokens();
-        setTrendingTokens(tokens);
+    const fetchWatchlistTokens = async () => {
+      try {
+        // Fetch details for each watchlist token
+        const tokens = await Promise.all(
+          watchlist.map(async (ca) => {
+            const response = await fetch(`/api/tokens/${ca}/details`);
+            return response.json();
+          })
+        );
+        setWatchlistTokens(tokens);
+      } catch (error) {
+        console.error('Error fetching watchlist tokens:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    loadTokens();
-  }, [isConnected, router, trendingTokens, setTrendingTokens]);
-
-  const watchedTokens = trendingTokens.filter((t) => watchlist.includes(t.ca));
-
-  const handleBuy = (token: any) => {
-    setSelectedToken(token);
-    setTradeMode('BUY');
-  };
+    if (watchlist.length > 0) {
+      fetchWatchlistTokens();
+    } else {
+      setLoading(false);
+    }
+  }, [wallet, watchlist, router]);
 
   return (
     <div className="flex h-screen bg-[#0f1419]">
@@ -48,51 +51,37 @@ export default function Watchlist() {
         <Topbar />
         <div className="flex-1 overflow-auto scrollbar-hide">
           <div className="p-8 max-w-7xl mx-auto">
-            <h1 className="text-3xl font-bold mb-2">Watchlist</h1>
-            <p className="text-gray-400 mb-6">Tokens you're monitoring</p>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold mb-2">Watchlist</h1>
+              <p className="text-gray-400">Your favorite tokens tracked in real-time</p>
+            </div>
 
             {loading ? (
               <div className="flex items-center justify-center h-64">
-                <div className="text-center space-y-4">
-                  <div className="animate-spin rounded-full h-12 w-12 border border-[#2a2f3e] border-t-[#00d084] mx-auto"></div>
-                  <p className="text-gray-400">Loading watchlist...</p>
-                </div>
+                <div className="animate-spin rounded-full h-12 w-12 border border-[#2a2f3e] border-t-[#00d084]"></div>
               </div>
-            ) : watchedTokens.length === 0 ? (
-              <div className="bg-[#1a1f2e] border border-dashed border-[#2a2f3e] rounded-lg p-12 text-center">
-                <Star className="mx-auto mb-4 text-gray-400" size={32} />
-                <p className="text-gray-400">No tokens in watchlist</p>
-                <p className="text-gray-500 text-sm mt-2">Add tokens to your watchlist to track them</p>
+            ) : watchlistTokens.length === 0 ? (
+              <div className="bg-[#1a1f2e] border border-[#2a2f3e] rounded-lg p-12 text-center">
+                <Heart size={48} className="mx-auto mb-4 text-gray-400" />
+                <h3 className="text-xl font-semibold mb-2">No watchlist yet</h3>
+                <p className="text-gray-400 mb-6">Add tokens to your watchlist to track them here</p>
+                <button
+                  onClick={() => router.push('/dashboard')}
+                  className="btn-primary px-6 py-2"
+                >
+                  Explore Tokens
+                </button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {watchedTokens.map((token) => (
-                  <div key={token.ca} className="group">
-                    <TokenCard token={token} onView={() => setSelectedToken(token)} />
-                    <div className="mt-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => handleBuy(token)}
-                        className="btn-primary flex-1 py-1 text-sm"
-                      >
-                        Buy
-                      </button>
-                    </div>
-                  </div>
+                {watchlistTokens.map((token) => (
+                  <TokenCard key={token.ca} token={token} />
                 ))}
               </div>
             )}
           </div>
         </div>
       </div>
-
-      {selectedToken && (
-        <TradeModal
-          token={selectedToken}
-          side={tradeMode}
-          onClose={() => setSelectedToken(null)}
-          onSuccess={() => setSelectedToken(null)}
-        />
-      )}
     </div>
   );
 }
